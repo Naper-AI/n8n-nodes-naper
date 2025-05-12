@@ -1,0 +1,33 @@
+{
+  "name": "@naper/n8n-nodes",
+  "version": "1.0.0",
+  "description": "A Naper.ai opensource nodes package to n8n",
+  "main": "index.js",
+  "scripts": {
+    "lint": "gts lint",
+    "clean": "gts clean",
+    "compile": "tsc",
+    "fix": "gts fix",
+    "prepare": "npm run compile",
+    "pretest": "npm run compile",
+    "posttest": "npm run lint"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/mustache": "^4.2.5",
+    "@types/node": "^22.13.10",
+    "gts": "^6.0.2",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "@aws-sdk/client-sqs": "^3.758.0",
+    "mustache": "^4.2.0",
+    "n8n-core": "^1.81.0",
+    "n8n-workflow": "^1.70.0"
+  }
+}

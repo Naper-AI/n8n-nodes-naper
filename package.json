@@ -4,10 +4,22 @@
   "description": "A Naper.ai opensource nodes package to n8n",
   "main": "index.js",
   "scripts": {
+    "dev": "tsc --watch",
     "lint": "gts lint",
     "clean": "gts clean",
     "compile": "tsc",
     "fix": "gts fix"
+  },
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "nodes": [
+      "dist/LiquidAiExtractor.node.js",
+      "dist/LiquidTemplate.node.js",
+      "dist/MustacheTemplate.node.js",
+      "dist/SQSTrigger.node.js",
+      "dist/SQSDelete.node.js",
+      "dist/SQSReject.node.js"
+    ]
   },
   "engines": {
     "node": ">=20.0.0"
@@ -23,17 +35,9 @@
   },
   "dependencies": {
     "@aws-sdk/client-sqs": "^3.758.0",
+    "liquidjs": "^10.21.0",
     "mustache": "^4.2.0",
     "n8n-core": "^1.81.0",
     "n8n-workflow": "^1.70.0"
-  },
-  "n8n": {
-    "n8nNodesApiVersion": 1,
-    "nodes": [
-      "dist/MustacheTemplate.node.js",
-      "dist/SQSTrigger.node.js",
-      "dist/SQSDelete.node.js",
-      "dist/SQSReject.node.js"
-    ]
   }
 }

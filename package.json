@@ -3,6 +3,10 @@
   "version": "1.0.1",
   "description": "A Naper.ai opensource nodes package to n8n",
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Naper-AI/n8n-nodes-naper"
+  },
   "scripts": {
     "dev": "tsc --watch",
     "lint": "gts lint",

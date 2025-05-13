@@ -13,7 +13,7 @@
     "clean": "gts clean",
     "compile": "tsc",
     "fix": "gts fix",
-    "publish": "npm run clean && npm run lint && npm run compile && npm publish"
+    "prepublish": "npm run clean && npm run lint && npm run compile"
   },
   "n8n": {
     "n8nNodesApiVersion": 1,

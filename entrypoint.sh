@@ -13,7 +13,7 @@ echo "Linking custom lib to n8n..."
 cd /home/node/.n8n
 mkdir -p nodes
 cd nodes
-npm link @naper/n8n-nodes
+npm link @naper/n8n-nodes-naper
 
 # Start n8n
 echo "Starting n8n..."

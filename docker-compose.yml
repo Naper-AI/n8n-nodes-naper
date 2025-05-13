@@ -1,6 +1,8 @@
 services:
   n8n:
-    image: n8nio/n8n:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     volumes:
       - n8n_data:/home/node/.n8n
       - ./:/home/node/app
@@ -9,7 +11,7 @@ services:
     ports:
       - 5678:5678
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=local
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_HOST=postgres
       - DB_POSTGRESDB_PORT=5432

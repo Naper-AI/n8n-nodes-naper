@@ -7,10 +7,7 @@
     "lint": "gts lint",
     "clean": "gts clean",
     "compile": "tsc",
-    "fix": "gts fix",
-    "prepare": "npm run compile",
-    "pretest": "npm run compile",
-    "posttest": "npm run lint"
+    "fix": "gts fix"
   },
   "engines": {
     "node": ">=20.0.0"
@@ -29,5 +26,14 @@
     "mustache": "^4.2.0",
     "n8n-core": "^1.81.0",
     "n8n-workflow": "^1.70.0"
+  },
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "nodes": [
+      "dist/MustacheTemplate.node.js",
+      "dist/SQSTrigger.node.js",
+      "dist/SQSDelete.node.js",
+      "dist/SQSReject.node.js"
+    ]
   }
 }

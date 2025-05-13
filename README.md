@@ -22,7 +22,7 @@ npm install @naper/n8n-nodes-naper
 
 ## Usage
 
-1. Add the package to your n8n instance (see [n8n custom nodes documentation](https://docs.n8n.io/integrations/creating-nodes/code/)).
+1. Add the package to your n8n instance (see [n8n community nodes documentation](https://docs.n8n.io/integrations/community-nodes/installation/)).
 2. Restart n8n.
 3. The new nodes will appear in the n8n editor under their respective names:
    - SQS Trigger

@@ -14,7 +14,6 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "nodes": [
-      "dist/LiquidAiExtractor.node.js",
       "dist/LiquidTemplate.node.js",
       "dist/MustacheTemplate.node.js",
       "dist/SQSTrigger.node.js",

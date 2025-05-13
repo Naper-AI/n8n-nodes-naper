@@ -1,67 +1,40 @@
-# SQS Trigger Node Testing Environment
+# @naper/n8n-nodes-naper
 
-This repository contains a Docker Compose setup for testing the SQS Trigger node with n8n and LocalStack.
+A collection of enterprise-grade [n8n](https://n8n.io) nodes created by [Naper.ai](https://naper.ai) to power advanced automation workflows.
 
-## Prerequisites
+## Overview
 
-- Docker
-- Docker Compose
+This package provides a set of custom nodes for n8n, designed for robust integrations and data processing in enterprise environments.
 
-## Setup Instructions
+## Included Nodes
 
-1. Start the services:
+- **SQS Trigger**: Listens to AWS SQS queues and triggers workflows when new messages arrive. Supports advanced concurrency and resource controls.
+- **SQS Delete Message**: Deletes a message from an SQS queue after processing.
+- **SQS Reject Message**: Changes the visibility of a message in SQS, allowing it to be reprocessed or returned to the queue.
+- **Liquid Template**: Processes [Liquid](https://shopify.github.io/liquid/) templates with input or custom data.
+- **Mustache Template**: Processes [Mustache](https://mustache.github.io/) templates with input or custom data.
+
+## Installation
+
 ```bash
-docker-compose up -d
+npm install @naper/n8n-nodes-naper
 ```
 
-2. Wait for both services to be fully started (this may take a minute or two)
+## Usage
 
-3. Access n8n at http://localhost:5678
+1. Add the package to your n8n instance (see [n8n custom nodes documentation](https://docs.n8n.io/integrations/creating-nodes/code/)).
+2. Restart n8n.
+3. The new nodes will appear in the n8n editor under their respective names:
+   - SQS Trigger
+   - SQS Delete Message
+   - SQS Reject Message
+   - Liquid Template
+   - Mustache Template
 
-## Creating a Test SQS Queue
+## License
 
-You can create a test SQS queue using the AWS CLI with LocalStack:
+This project is licensed under the [MIT License](./LICENSE).
 
-```bash
-# Install AWS CLI if you haven't already
-# Then configure it to use LocalStack
-aws configure set aws_access_key_id test
-aws configure set aws_secret_access_key test
-aws configure set region us-east-1
-aws configure set endpoint-url http://localhost:4566
+---
 
-# Create a test queue
-aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name test-queue
-
-# Get the queue URL
-aws --endpoint-url=http://localhost:4566 sqs get-queue-url --queue-name test-queue
-```
-
-## Testing the SQS Trigger Node
-
-1. In n8n, create a new workflow
-2. Add the SQS Trigger node
-3. Configure the node with these credentials:
-   - AWS Access Key ID: test
-   - AWS Secret Access Key: test
-   - Region: us-east-1
-   - Queue URL: http://localhost:4566/000000000000/test-queue
-
-4. Send a test message to the queue:
-```bash
-aws --endpoint-url=http://localhost:4566 sqs send-message \
-    --queue-url http://localhost:4566/000000000000/test-queue \
-    --message-body '{"test": "message"}'
-```
-
-## Stopping the Services
-
-To stop the services:
-```bash
-docker-compose down
-```
-
-To stop and remove all data:
-```bash
-docker-compose down -v
-``` 
+Made with ❤️ by [Naper.ai](https://naper.ai) 

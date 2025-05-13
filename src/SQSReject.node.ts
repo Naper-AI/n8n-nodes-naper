@@ -5,10 +5,7 @@ import {
     INodeExecutionData,
     NodeConnectionType,
 } from 'n8n-workflow';
-import {
-    SQSClient,
-    ChangeMessageVisibilityCommand,
-} from '@aws-sdk/client-sqs';
+import { SQSClient, ChangeMessageVisibilityCommand } from '@aws-sdk/client-sqs';
 
 export class SQSReject implements INodeType {
     description: INodeTypeDescription = {
@@ -60,7 +57,8 @@ export class SQSReject implements INodeType {
                 type: 'number',
                 default: 0,
                 required: true,
-                description: 'Set to 0 to make the message immediately available again',
+                description:
+                    'Set to 0 to make the message immediately available again',
             },
         ],
     };
@@ -81,18 +79,25 @@ export class SQSReject implements INodeType {
 
         for (let i = 0; i < items.length; i++) {
             const queueUrl = this.getNodeParameter('queueUrl', i) as string;
-            const receiptHandle = this.getNodeParameter('receiptHandle', i) as string;
-            const visibilityTimeout = this.getNodeParameter('visibilityTimeout', i) as number;
+            const receiptHandle = this.getNodeParameter(
+                'receiptHandle',
+                i,
+            ) as string;
+            const visibilityTimeout = this.getNodeParameter(
+                'visibilityTimeout',
+                i,
+            ) as number;
 
             try {
-                const changeVisibilityCommand = new ChangeMessageVisibilityCommand({
-                    QueueUrl: queueUrl,
-                    ReceiptHandle: receiptHandle,
-                    VisibilityTimeout: visibilityTimeout,
-                });
+                const changeVisibilityCommand =
+                    new ChangeMessageVisibilityCommand({
+                        QueueUrl: queueUrl,
+                        ReceiptHandle: receiptHandle,
+                        VisibilityTimeout: visibilityTimeout,
+                    });
 
                 await sqsClient.send(changeVisibilityCommand);
-                
+
                 const item = items[i];
                 returnData.push({
                     ...item,
@@ -103,10 +108,14 @@ export class SQSReject implements INodeType {
                         returnedToQueue: visibilityTimeout === 0,
                     },
                 });
-                
-                this.logger.info(`Successfully rejected message to queue: ${queueUrl}`);
+
+                this.logger.info(
+                    `Successfully rejected message to queue: ${queueUrl}`,
+                );
             } catch (error) {
-                this.logger.error(`Error rejecting SQS message: ${(error as Error).message}`);
+                this.logger.error(
+                    `Error rejecting SQS message: ${(error as Error).message}`,
+                );
                 const item = items[i];
                 returnData.push({
                     ...item,

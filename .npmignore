@@ -1,0 +1,4 @@
+src/
+docker-compose.yml
+Dockerfile
+entrypoint.sh

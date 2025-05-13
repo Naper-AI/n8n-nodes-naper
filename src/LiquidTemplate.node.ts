@@ -77,7 +77,8 @@ export class LiquidTemplate implements INodeType {
                 name: 'outputKey',
                 type: 'string',
                 default: 'renderedTemplate',
-                description: 'Key to store the rendered template under in the output',
+                description:
+                    'Key to store the rendered template under in the output',
                 required: true,
             },
             {
@@ -85,7 +86,8 @@ export class LiquidTemplate implements INodeType {
                 name: 'keepInputData',
                 type: 'boolean',
                 default: true,
-                description: 'Whether to keep the input data and add the rendered template or only return the rendered template',
+                description:
+                    'Whether to keep the input data and add the rendered template or only return the rendered template',
             },
         ],
     };
@@ -98,19 +100,33 @@ export class LiquidTemplate implements INodeType {
         for (let i = 0; i < items.length; i++) {
             try {
                 const template = this.getNodeParameter('template', i) as string;
-                const dataSource = this.getNodeParameter('dataSource', i) as string;
-                const outputKey = this.getNodeParameter('outputKey', i) as string;
-                const keepInputData = this.getNodeParameter('keepInputData', i) as boolean;
+                const dataSource = this.getNodeParameter(
+                    'dataSource',
+                    i,
+                ) as string;
+                const outputKey = this.getNodeParameter(
+                    'outputKey',
+                    i,
+                ) as string;
+                const keepInputData = this.getNodeParameter(
+                    'keepInputData',
+                    i,
+                ) as boolean;
 
                 let templateData: object;
                 if (dataSource === 'inputItem') {
                     templateData = items[i].json;
                 } else {
-                    templateData = JSON.parse(this.getNodeParameter('customData', i) as string);
+                    templateData = JSON.parse(
+                        this.getNodeParameter('customData', i) as string,
+                    );
                 }
 
                 // Render the Liquid template
-                const renderedTemplate = await engine.parseAndRender(template, templateData);
+                const renderedTemplate = await engine.parseAndRender(
+                    template,
+                    templateData,
+                );
 
                 let outputData: INodeExecutionData;
                 if (keepInputData) {
@@ -132,7 +148,9 @@ export class LiquidTemplate implements INodeType {
                 returnData.push(outputData);
                 this.logger.info('Successfully rendered Liquid template');
             } catch (error) {
-                this.logger.error(`Error rendering Liquid template: ${(error as Error).message}`);
+                this.logger.error(
+                    `Error rendering Liquid template: ${(error as Error).message}`,
+                );
                 returnData.push({
                     ...items[i],
                     json: {
@@ -146,4 +164,4 @@ export class LiquidTemplate implements INodeType {
 
         return [returnData];
     }
-} 
+}

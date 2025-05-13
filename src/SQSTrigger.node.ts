@@ -8,10 +8,7 @@ import {
     IExecuteResponsePromiseData,
     IRun,
 } from 'n8n-workflow';
-import {
-    SQSClient,
-    ReceiveMessageCommand,
-} from '@aws-sdk/client-sqs';
+import { SQSClient, ReceiveMessageCommand } from '@aws-sdk/client-sqs';
 import * as os from 'os';
 
 export class SQSTrigger implements INodeType {
@@ -76,7 +73,8 @@ export class SQSTrigger implements INodeType {
                 name: 'visibilityTimeout',
                 type: 'number',
                 default: 30,
-                description: 'Time in seconds that a message is hidden after being received before returning to the queue if not deleted',
+                description:
+                    'Time in seconds that a message is hidden after being received before returning to the queue if not deleted',
             },
             {
                 displayName: 'Concurrency Control',
@@ -86,23 +84,25 @@ export class SQSTrigger implements INodeType {
                     {
                         name: 'None',
                         value: 'none',
-                        description: 'No concurrency limits (not recommended for production)'
+                        description:
+                            'No concurrency limits (not recommended for production)',
                     },
                     {
                         name: 'Fixed Limit',
                         value: 'fixed',
-                        description: 'Limit concurrent processing to a fixed number'
+                        description:
+                            'Limit concurrent processing to a fixed number',
                     },
                     {
                         name: 'CPU Usage',
                         value: 'cpu',
-                        description: 'Limit based on CPU usage percentage'
+                        description: 'Limit based on CPU usage percentage',
                     },
                     {
                         name: 'Memory Usage',
                         value: 'memory',
-                        description: 'Limit based on memory usage percentage'
-                    }
+                        description: 'Limit based on memory usage percentage',
+                    },
                 ],
                 default: 'fixed',
                 description: 'Method to control concurrent message processing',
@@ -112,7 +112,8 @@ export class SQSTrigger implements INodeType {
                 name: 'maxConcurrentProcesses',
                 type: 'number',
                 default: 5,
-                description: 'Maximum number of messages to process simultaneously',
+                description:
+                    'Maximum number of messages to process simultaneously',
                 displayOptions: {
                     show: {
                         concurrencyControl: ['fixed'],
@@ -124,7 +125,8 @@ export class SQSTrigger implements INodeType {
                 name: 'maxCpuUsage',
                 type: 'number',
                 default: 80,
-                description: 'Stop processing new messages when CPU usage exceeds this percentage',
+                description:
+                    'Stop processing new messages when CPU usage exceeds this percentage',
                 displayOptions: {
                     show: {
                         concurrencyControl: ['cpu'],
@@ -136,7 +138,8 @@ export class SQSTrigger implements INodeType {
                 name: 'maxMemoryUsage',
                 type: 'number',
                 default: 80,
-                description: 'Stop processing new messages when memory usage exceeds this percentage',
+                description:
+                    'Stop processing new messages when memory usage exceeds this percentage',
                 displayOptions: {
                     show: {
                         concurrencyControl: ['memory'],
@@ -167,18 +170,30 @@ export class SQSTrigger implements INodeType {
             'waitTimeSeconds',
         ) as number;
         const maxMessages = this.getNodeParameter('maxMessages') as number;
-        const visibilityTimeout = this.getNodeParameter('visibilityTimeout') as number;
-        const concurrencyControl = this.getNodeParameter('concurrencyControl') as string;
-        
-        const maxConcurrentProcesses = concurrencyControl === 'fixed' ? 
-            this.getNodeParameter('maxConcurrentProcesses') as number : Infinity;
-        const maxCpuUsage = concurrencyControl === 'cpu' ? 
-            this.getNodeParameter('maxCpuUsage') as number : Infinity;
-        const maxMemoryUsage = concurrencyControl === 'memory' ? 
-            this.getNodeParameter('maxMemoryUsage') as number : Infinity;
-        
-        const resourceCheckInterval = concurrencyControl === 'cpu' || concurrencyControl === 'memory' ?
-            this.getNodeParameter('resourceCheckInterval') as number : 5;
+        const visibilityTimeout = this.getNodeParameter(
+            'visibilityTimeout',
+        ) as number;
+        const concurrencyControl = this.getNodeParameter(
+            'concurrencyControl',
+        ) as string;
+
+        const maxConcurrentProcesses =
+            concurrencyControl === 'fixed'
+                ? (this.getNodeParameter('maxConcurrentProcesses') as number)
+                : Infinity;
+        const maxCpuUsage =
+            concurrencyControl === 'cpu'
+                ? (this.getNodeParameter('maxCpuUsage') as number)
+                : Infinity;
+        const maxMemoryUsage =
+            concurrencyControl === 'memory'
+                ? (this.getNodeParameter('maxMemoryUsage') as number)
+                : Infinity;
+
+        const resourceCheckInterval =
+            concurrencyControl === 'cpu' || concurrencyControl === 'memory'
+                ? (this.getNodeParameter('resourceCheckInterval') as number)
+                : 5;
 
         let activeProcesses = 0;
         let lastResourceCheck = Date.now();
@@ -193,41 +208,46 @@ export class SQSTrigger implements INodeType {
 
             if (Date.now() - lastResourceCheck > resourceCheckInterval * 1000) {
                 lastResourceCheck = Date.now();
-                
+
                 if (concurrencyControl === 'cpu') {
                     const cpus = os.cpus();
                     let totalIdle = 0;
                     let totalTick = 0;
 
-                    cpus.forEach((cpu) => {
+                    cpus.forEach(cpu => {
                         for (const type in cpu.times) {
-                            totalTick += cpu.times[type as keyof typeof cpu.times];
+                            totalTick +=
+                                cpu.times[type as keyof typeof cpu.times];
                         }
                         totalIdle += cpu.times.idle;
                     });
-                    
-                    const currentCpuUsage = 100 - (totalIdle / totalTick * 100);
+
+                    const currentCpuUsage = 100 - (totalIdle / totalTick) * 100;
                     canProcessMore = currentCpuUsage < maxCpuUsage;
-                    
+
                     if (!canProcessMore) {
-                        this.logger.info(`CPU usage at ${currentCpuUsage.toFixed(2)}%, pausing message processing`);
+                        this.logger.info(
+                            `CPU usage at ${currentCpuUsage.toFixed(2)}%, pausing message processing`,
+                        );
                     }
-                } 
-                
+                }
+
                 if (concurrencyControl === 'memory') {
                     const totalMemory = os.totalmem();
                     const freeMemory = os.freemem();
                     const usedMemory = totalMemory - freeMemory;
                     const memoryUsagePercent = (usedMemory / totalMemory) * 100;
-                    
+
                     canProcessMore = memoryUsagePercent < maxMemoryUsage;
-                    
+
                     if (!canProcessMore) {
-                        this.logger.info(`Memory usage at ${memoryUsagePercent.toFixed(2)}%, pausing message processing`);
+                        this.logger.info(
+                            `Memory usage at ${memoryUsagePercent.toFixed(2)}%, pausing message processing`,
+                        );
                     }
                 }
             }
-            
+
             return canProcessMore;
         };
 
@@ -247,7 +267,9 @@ export class SQSTrigger implements INodeType {
 
             try {
                 if (!(await checkResourceUsage())) {
-                    this.logger.debug('Resource limit reached, delaying message processing');
+                    this.logger.debug(
+                        'Resource limit reached, delaying message processing',
+                    );
                     timeout = setTimeout(processMessages, pollInterval * 1000);
                     return;
                 }
@@ -288,17 +310,26 @@ export class SQSTrigger implements INodeType {
                             },
                         };
 
-                        const responsePromise = this.helpers.createDeferredPromise<IExecuteResponsePromiseData>();
-                        const donePromise = this.helpers.createDeferredPromise<IRun>();
-                        this.emit([[messageData]], responsePromise, donePromise);
+                        const responsePromise =
+                            this.helpers.createDeferredPromise<IExecuteResponsePromiseData>();
+                        const donePromise =
+                            this.helpers.createDeferredPromise<IRun>();
+                        this.emit(
+                            [[messageData]],
+                            responsePromise,
+                            donePromise,
+                        );
 
                         donePromise.promise
                             .then(() => {
                                 activeProcesses--;
                             })
-                            .catch((error) => {
+                            .catch(error => {
                                 activeProcesses--;
-                                this.logger.error('Error processing SQS message', { error });
+                                this.logger.error(
+                                    'Error processing SQS message',
+                                    { error },
+                                );
                             });
                     }
 

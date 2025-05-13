@@ -5,10 +5,7 @@ import {
     INodeExecutionData,
     NodeConnectionType,
 } from 'n8n-workflow';
-import {
-    SQSClient,
-    DeleteMessageCommand,
-} from '@aws-sdk/client-sqs';
+import { SQSClient, DeleteMessageCommand } from '@aws-sdk/client-sqs';
 
 export class SQSDelete implements INodeType {
     description: INodeTypeDescription = {
@@ -73,7 +70,10 @@ export class SQSDelete implements INodeType {
 
         for (let i = 0; i < items.length; i++) {
             const queueUrl = this.getNodeParameter('queueUrl', i) as string;
-            const receiptHandle = this.getNodeParameter('receiptHandle', i) as string;
+            const receiptHandle = this.getNodeParameter(
+                'receiptHandle',
+                i,
+            ) as string;
 
             try {
                 const deleteCommand = new DeleteMessageCommand({
@@ -82,7 +82,7 @@ export class SQSDelete implements INodeType {
                 });
 
                 await sqsClient.send(deleteCommand);
-                
+
                 const item = items[i];
                 returnData.push({
                     ...item,
@@ -92,10 +92,14 @@ export class SQSDelete implements INodeType {
                         success: true,
                     },
                 });
-                
-                this.logger.info(`Successfully deleted message from queue: ${queueUrl}`);
+
+                this.logger.info(
+                    `Successfully deleted message from queue: ${queueUrl}`,
+                );
             } catch (error) {
-                this.logger.error(`Error deleting SQS message: ${(error as Error).message}`);
+                this.logger.error(
+                    `Error deleting SQS message: ${(error as Error).message}`,
+                );
                 const item = items[i];
                 returnData.push({
                     ...item,

@@ -15,7 +15,7 @@ export class ImageCropper implements INodeType {
     icon: 'file:image-cropper.svg',
     group: ['imagetransform'],
     version: 1,
-    description: 'Corta espaços em branco variantes e faz zoom redimensionando ao tamanho original',
+    description: 'Crops varying white spaces and zooms by resizing to original size',
     defaults: {
       name: 'ImageCropper',
       color: '#00AAFF',
@@ -28,21 +28,21 @@ export class ImageCropper implements INodeType {
         name: 'binaryPropertyName',
         type: 'string',
         default: 'data',
-        description: 'O nome da propriedade binária de entrada que contém a imagem',
+        description: 'The name of the input binary property that contains the image',
       },
       {
         displayName: 'Output Property',
         name: 'outputPropertyName',
         type: 'string',
         default: 'cropped',
-        description: 'Nome da propriedade binária de saída com a imagem processada',
+        description: 'Name of the output binary property with the processed image',
       },
       {
         displayName: 'Resize Option',
         name: 'resizeOption',
         type: 'options',
         default: 'none',
-        description: 'Como redimensionar após o recorte',
+        description: 'How to resize after cropping',
         options: [
           { name: 'None', value: 'none' },
           { name: 'Ignore Aspect Ratio', value: 'ignore' },
@@ -57,14 +57,14 @@ export class ImageCropper implements INodeType {
         name: 'targetWidth',
         type: 'number',
         default: 500,
-        description: 'Largura desejada para redimensionamento',
+        description: 'Desired width for resizing',
       },
       {
         displayName: 'Target Height',
         name: 'targetHeight',
         type: 'number',
         default: 500,
-        description: 'Altura desejada para redimensionamento',
+        description: 'Desired height for resizing',
       }
     ],
   };
@@ -90,17 +90,17 @@ export class ImageCropper implements INodeType {
       const orig = item.binary[binaryProp] as IBinaryData;
       const buf = Buffer.from(orig.data, 'base64');
 
-      // 1. Remove espaços em branco usando trim()
+      // 1. Remove white spaces using trim()
       const trimmed = await sharp(buf).trim().toBuffer();
 
-      // 2. Define pipeline inicial e metadados
+      // 2. Define initial pipeline and metadata
       const image = sharp(trimmed);
       const meta = await image.metadata();
       let sharpPipeline = image;
 
       const { width, height } = meta;
 
-      // 3. Aplica redimensionamento conforme a opção selecionada
+      // 3. Apply resizing according to the selected option
       const shouldResizeLarger = width! > targetWidth || height! > targetHeight;
       const shouldResizeSmaller = width! < targetWidth || height! < targetHeight;
 
@@ -126,7 +126,7 @@ export class ImageCropper implements INodeType {
 
       const final = await sharpPipeline.toBuffer();
 
-      // 4. Prepara a saída
+      // 4. Prepare the output
       returnData.push({
         json: item.json,
         binary: {

@@ -1,13 +1,13 @@
 /*****************************************************************************************
  * ImageCompose v3
  * ----------------------------------------------------------------------------
- * 🔹 Detecta a maior área branca contínua (ou a extremidade indicada) do BG
- * 🔹 Redimensiona o produto proporcionalmente para ocupar o máximo da área útil
- * 🔹 Centraliza/alinhas (horizontal e vertical) conforme parâmetros
- * 🔹 Rotaciona automaticamente 90 ° se a peça for muito vertical (aspect ratio > 1.8)
- * 🔹 Respeita padding configurável
+ * 🔹 Detects the largest continuous white area (or the indicated edge) of the BG
+ * 🔹 Resizes the product proportionally to occupy the maximum useful area
+ * 🔹 Centers/aligns (horizontal and vertical) according to parameters
+ * 🔹 Automatically rotates 90° if the piece is too vertical (aspect ratio > 1.8)
+ * 🔹 Respects configurable padding
  * ----------------------------------------------------------------------------
- * Dependências: sharp (npm i sharp)
+ * Dependencies: sharp (npm i sharp)
  *****************************************************************************************/
 
 import {
@@ -29,7 +29,7 @@ export class ImageCompose implements INodeType {
     group: ['transform'],
     version: 3,
     description:
-      'Cola uma imagem de produto na maior área branca do BG, redimensionando e alinhando automaticamente',
+      'Pastes a product image onto the largest white area of the BG, automatically resizing and aligning',
     defaults: {
       name: 'ImageCompose',
       color: '#FF8800',
@@ -37,79 +37,79 @@ export class ImageCompose implements INodeType {
     inputs: ['main'] as NodeConnectionType[],
     outputs: ['main'] as NodeConnectionType[],
     properties: [
-      /* ---------------------- campos básicos ---------------------- */
+      /* ---------------------- basic fields ---------------------- */
       {
         displayName: 'Base Image Property',
         name: 'baseImageProperty',
         type: 'string',
         default: 'bg',
-        description: 'Nome da propriedade binária com a imagem de fundo',
+        description: 'Name of the binary property with the background image',
       },
       {
         displayName: 'Product Image Property',
         name: 'overlayImageProperty',
         type: 'string',
         default: 'product',
-        description: 'Nome da propriedade binária com a imagem do produto',
+        description: 'Name of the binary property with the product image',
       },
       {
         displayName: 'Output Property',
         name: 'outputPropertyName',
         type: 'string',
         default: 'composed',
-        description: 'Nome da propriedade binária de saída',
+        description: 'Name of the output binary property',
       },
-      /* ---------------------- parâmetros de layout ---------------------- */
+      /* ---------------------- layout parameters ---------------------- */
       {
         displayName: 'Padding (px)',
         name: 'padding',
         type: 'number',
         default: 10,
-        description: 'Margem interna mínima entre produto e área útil',
+        description: 'Minimum internal margin between product and useful area',
       },
       {
-        displayName: 'Modo de Colagem',
+        displayName: 'Compose Mode',
         name: 'composeMode',
         type: 'options',
         options: [
-          { name: 'Detectar Área Branca', value: 'detectWhite' },  // atual
-          { name: 'Preencher Fundo Inteiro', value: 'fillAll' },   // novo modo!
+          { name: 'Detect White Area', value: 'detectWhite' },  // current
+          { name: 'Fill Entire Background', value: 'fillAll' },   // new mode!
         ],
         default: 'detectWhite',
-        description: 'Se "Preencher Fundo Inteiro", o produto será encaixado no BG todo (ideal para BG branco puro).',
+        description: 'If "Fill Entire Background", the product will be fitted to the entire BG (ideal for pure white BG).',
       },
       {
-        displayName: 'Alinhamento Horizontal',
+        displayName: 'Horizontal Alignment',
         name: 'alignHorizontal',
         type: 'options',
         options: [
-          { name: 'Início', value: 'start' },
-          { name: 'Centro', value: 'center' },
-          { name: 'Fim', value: 'end' },
+          { name: 'Start', value: 'start' },
+          { name: 'Center', value: 'center' },
+          { name: 'End', value: 'end' },
         ],
         default: 'center',
       },
       {
-        displayName: 'Alinhamento Vertical (preferência da área branca)',
+        displayName: 'Vertical Alignment (white area preference)',
         name: 'alignVertical',
         type: 'options',
         options: [
-          { name: 'Topo', value: 'top' },
-          { name: 'Centro', value: 'center' },
-          { name: 'Base', value: 'bottom' },
+          { name: 'Top', value: 'top' },
+          { name: 'Center', value: 'center' },
+          { name: 'Bottom', value: 'bottom' },
         ],
         default: 'bottom',
         description:
-          'Onde procurar primeiro a maior área branca (se não existir, o node usa a maior área global)',
+          'Where to look first for the largest white area (if it doesn\'t exist, the node uses the largest global area)',
       },
-      /* ---------------------- rotação ---------------------- */
+      /* ---------------------- rotation ---------------------- */
       {
-        displayName: 'Rotação Manual (°)',
+        displayName: 'Manual Rotation (°)',
         name: 'tiltAngle',
         type: 'number',
         default: 0,
         description:
-          'Força uma rotação específica. Deixe 0 para rotação automática apenas se a peça for muito vertical.',
+          'Forces a specific rotation. Leave 0 for automatic rotation only if the piece is too vertical.',
       },
     ],
   };
@@ -118,7 +118,7 @@ export class ImageCompose implements INodeType {
    * EXECUTE
    *****************************************************************************************/
   async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
-      // Função auxiliar: acha o melhor ângulo que preenche mais, testando todos de 5 em 5 graus
+      // Helper function: finds the best angle that fills the most, testing all angles in 5-degree increments
     async function findBestFitRotation(
       prodBufOrig: Buffer,
       bgW: number,
@@ -129,27 +129,27 @@ export class ImageCompose implements INodeType {
       let best: any = {};
 
       for (let angle = -90; angle <= 90; angle += 5) {
-        // 1️⃣ gira e trim para cortar transparência
+        // 1️⃣ rotate and trim to cut transparency
         const rotatedBuf = angle !== 0
           ? await sharp(prodBufOrig)
               .rotate(angle, { background: { r: 255, g: 255, b: 255, alpha: 0 } })
-              .trim()   // remove bordas transparentes
+              .trim()   // remove transparent borders
               .toBuffer()
           : prodBufOrig;
 
-        // 2️⃣ metadata já trimado
+        // 2️⃣ metadata already trimmed
         const meta = await sharp(rotatedBuf).metadata();
 
         const availW = bgW - 2 * padding;
         const availH = bgH - 2 * padding;
         if (availW <= 0 || availH <= 0) continue;
 
-        // 3️⃣ scale proporcional
+        // 3️⃣ proportional scale
         const scale = Math.min(availW / meta.width!, availH / meta.height!);
         const w = Math.round(meta.width! * scale);
         const h = Math.round(meta.height! * scale);
 
-        // 4️⃣ seleciona o maior produto possível
+        // 4️⃣ select the largest possible product
         if (w * h > bestArea) {
           bestArea = w * h;
           best = { angle, width: w, height: h, buf: rotatedBuf };
@@ -164,7 +164,7 @@ export class ImageCompose implements INodeType {
     const returnData: INodeExecutionData[] = [];
 
     for (let i = 0; i < items.length; i++) {
-      // --- Parâmetros do node
+      // --- Node parameters
       const baseProp = this.getNodeParameter('baseImageProperty', i) as string;
       const prodProp = this.getNodeParameter('overlayImageProperty', i) as string;
       const outProp = this.getNodeParameter('outputPropertyName', i) as string;
@@ -174,31 +174,31 @@ export class ImageCompose implements INodeType {
       const tiltAngleParam = this.getNodeParameter('tiltAngle', i) as number;
       const composeMode = this.getNodeParameter('composeMode', i) as string;
 
-      // --- Buffers de imagem
+      // --- Image buffers
       const item = items[i];
       const bgBuf = Buffer.from((item.binary?.[baseProp] as IBinaryData).data, 'base64');
       const prodBufOrig = Buffer.from((item.binary?.[prodProp] as IBinaryData).data, 'base64');
 
-      // --- Metadados BG
+      // --- BG metadata
       const bgMeta = await sharp(bgBuf).metadata();
       const bgW = bgMeta.width!;
       const bgH = bgMeta.height!;
 
-      // --- Defina Rect e whiteRect só uma vez
+      // --- Define Rect and whiteRect only once
       type Rect = { x: number; y: number; w: number; h: number };
       let whiteRect: Rect;
 
       if (composeMode === 'fillAll') {
-        // 1. Novo modo: ocupa o BG inteiro (com padding) e busca rotação ótima
+        // 1. New mode: occupies the entire BG (with padding) and searches for optimal rotation
         whiteRect = { x: 0, y: 0, w: bgW, h: bgH };
 
-        // Busca melhor ângulo e resize
+        // Search for best angle and resize
         const best = await findBestFitRotation(prodBufOrig, bgW, bgH, padding);
         const prodResized = await sharp(best.buf).resize(best.width, best.height).toBuffer();
         let posX = whiteRect.x + Math.floor((whiteRect.w - best.width) / 2);
         let posY = whiteRect.y + Math.floor((whiteRect.h - best.height) / 2);
 
-        // --- Composição
+        // --- Composition
         const finalBuf = await sharp(bgBuf)
           .composite([{ input: prodResized, top: posY, left: posX }])
           .png()
@@ -216,7 +216,7 @@ export class ImageCompose implements INodeType {
           },
         });
       } else {
-        // 2. Modo "tradicional": detecta área branca inferior/topo
+        // 2. "Traditional" mode: detects white area at bottom/top
         const WHITE = 240;
         const { data, info } = await sharp(bgBuf).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
         let minY = bgH, maxY = -1;
@@ -244,7 +244,7 @@ export class ImageCompose implements INodeType {
         else if (vPref === 'bottom') whiteRect = rects.find(r => r.y !== 0)!;
         else whiteRect = rects.sort((a, b) => b.w * b.h - a.w * a.h)[0];
 
-        // Produto (rotação manual/vertical)
+        // Product (manual/vertical rotation)
         const prodMeta = await sharp(prodBufOrig).metadata();
         const prodAspect = prodMeta.height! / prodMeta.width!;
         let tiltAngle = 0;
@@ -261,13 +261,13 @@ export class ImageCompose implements INodeType {
         const prodH = prodRotMeta.height!;
         const availW = whiteRect.w - 2 * padding;
         const availH = whiteRect.h - 2 * padding;
-        if (availW <= 0 || availH <= 0) throw new Error('Área branca insuficiente para o produto.');
+        if (availW <= 0 || availH <= 0) throw new Error('Insufficient white area for the product.');
         const scale = Math.min(availW / prodW, availH / prodH);
         const newW = Math.round(prodW * scale);
         const newH = Math.round(prodH * scale);
         const prodResized = await sharp(prodBuf).resize(newW, newH).toBuffer();
 
-        // Posicionamento conforme alinhamento
+        // Positioning according to alignment
         let posX = whiteRect.x + padding;
         if (hAlign === 'center') posX = whiteRect.x + Math.floor((whiteRect.w - newW) / 2);
         else if (hAlign === 'end') posX = whiteRect.x + whiteRect.w - newW - padding;

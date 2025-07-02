@@ -22,7 +22,9 @@
       "dist/MustacheTemplate.node.js",
       "dist/SQSTrigger.node.js",
       "dist/SQSDelete.node.js",
-      "dist/SQSReject.node.js"
+      "dist/SQSReject.node.js",
+      "dist/image/ImageCropper.node.js",
+      "dist/image/ImageCompose.node.js"
     ]
   },
   "engines": {
@@ -34,6 +36,7 @@
   "devDependencies": {
     "@types/mustache": "^4.2.5",
     "@types/node": "^22.13.10",
+    "@types/sharp": "^0.31.1",
     "gts": "^6.0.2",
     "typescript": "^5.8.2"
   },
@@ -42,6 +45,7 @@
     "liquidjs": "^10.21.0",
     "mustache": "^4.2.0",
     "n8n-core": "^1.81.0",
-    "n8n-workflow": "^1.70.0"
+    "n8n-workflow": "^1.70.0",
+    "sharp": "^0.34.2"
   }
 }

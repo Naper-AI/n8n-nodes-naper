@@ -1,6 +1,6 @@
 {
   "name": "@naper/n8n-nodes-naper",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "A Naper.ai opensource nodes package to n8n",
   "main": "index.js",
   "repository": {
